@@ -8,10 +8,11 @@ canvas.width = innerWidth;
 canvas.height = innerHeight;
 const gravity = 0.5;
 let isCheckpointCollisionDetectionActive = true;
+let multiJump = 0;
 
 const proportionalSize = (size) => {
   return innerHeight < 500 ? Math.ceil((size / 500) * innerHeight) : size;
-}
+};
 
 class Player {
   constructor() {
@@ -44,6 +45,7 @@ class Player {
       this.velocity.y += gravity;
     } else {
       this.velocity.y = 0;
+      multiJump = 0;
     }
 
     if (this.position.x < this.width) {
@@ -177,13 +179,13 @@ const animate = () => {
 
     if (collisionDetectionRules.every((rule) => rule)) {
       player.velocity.y = 0;
+      multiJump = 0;
       return;
     }
 
     const platformDetectionRules = [
       player.position.x >= platform.position.x - player.width / 2,
-      player.position.x <=
-      platform.position.x + platform.width - player.width / 3,
+      player.position.x <= platform.position.x + platform.width - player.width / 3,
       player.position.y + player.height >= platform.position.y,
       player.position.y <= platform.position.y + platform.height,
     ];
@@ -221,8 +223,7 @@ const animate = () => {
 
     };
   });
-}
-
+};
 
 const keys = {
   rightKey: {
@@ -251,7 +252,14 @@ const movePlayer = (key, xVelocity, isPressed) => {
     case "ArrowUp":
     case " ":
     case "Spacebar":
-      player.velocity.y -= 8;
+      if (!isPressed) break;
+      
+      if (player.velocity.y < 0) {
+        multiJump = Infinity;
+      } else if (multiJump < 3) {
+        multiJump++;
+        player.velocity.y -= 8 * multiJump;
+      }
       break;
     case "ArrowRight":
       keys.rightKey.pressed = isPressed;
@@ -260,13 +268,13 @@ const movePlayer = (key, xVelocity, isPressed) => {
       }
       player.velocity.x += xVelocity;
   }
-}
+};
 
 const startGame = () => {
   canvas.style.display = "block";
   startScreen.style.display = "none";
   animate();
-}
+};
 
 const showCheckpointScreen = (msg) => {
   checkpointScreen.style.display = "block";
